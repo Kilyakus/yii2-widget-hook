@@ -1,0 +1,11 @@
+.dg-draggable-handle {cursor:move;cursor:grab;cursor:-webkit-grab;}
+
+.dg-hook {display:flex;justify-content:center;width:100%;height:43px;margin-bottom:20px;margin-top:30px;}
+
+.dg-hook:before,
+.dg-hook:after {content:'';position:absolute;top:50%;width:100vw;border-bottom:1px solid rgba(255,255,255,0.35);}
+
+.dg-hook:before {right:100%;margin-right:10px;}
+.dg-hook:after {left:100%;margin-left:10px;}
+
+.dg-hook .dg-hook-move {position:absolute;}
