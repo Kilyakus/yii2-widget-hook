@@ -1017,7 +1017,7 @@ var safeBlur = $.dg.safeBlur = function( element ) {
 	}
 };
 
-$.widget( "dg.draggable", $.dg.mouse, {
+$.widget( "dg.hook", $.dg.mouse, {
 	version: "1.12.1",
 	widgetEventPrefix: "drag",
 	options: {

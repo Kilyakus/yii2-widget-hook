@@ -11,10 +11,9 @@ class Hook extends Widget
 {
 	public $pluginName = 'hook';
 
-	public function init()
-	{
+	public $image = '/bin/media/img/move.png';
 
-	}
+	public $container = false;
 
 	public function run()
 	{
@@ -22,24 +21,43 @@ class Hook extends Widget
 
 		HookAssets::register(Yii::$app->getView());
 
-		echo Html::beginTag('div', ['class' => 'dg-hook']);
+		echo Html::beginTag('div', ['class' => 'dg-hook-container']);
 
-			echo Html::beginTag('div', ['class' => 'dg-hook-move']);
+			if($this->container === true){
+				echo Html::beginTag('div', ['class' => 'container']);
+			}
+
+			echo Html::beginTag('div', ['class' => 'dg-hook']);
+
+				echo Html::beginTag('div', ['class' => 'dg-hook-move']);
+
+					echo Html::beginTag('div', ['class' => 'dg-hook-grab']);
+
+						echo Html::img($this->image);
+
+					echo Html::endTag('div');
+
+				echo Html::endTag('div');
 
 			echo Html::endTag('div');
 
+			if($this->container === true){
+				echo Html::endTag('div');
+			}
+
 		echo Html::endTag('div');
 
-		// <div class="w-12 h-align v-align" style="height: 43px;margin-bottom: 20px;margin-top: 30px;">
-		// 	<div class="position-absolute move clearfix">
-		// 		<div class="cursor-move img">
-		// 			<img src="/bin/media/img/move.png" alt="">
-		// 		</div>
-		// 	</div>
-		// </div>
-
-		// $this->view->registerJs(new JsExpression("
-
-		// "), yii\web\View::POS_END);
+		$this->view->registerJs(new JsExpression("
+			$('.dg-hook-move').hook({
+				containment: 'parent',
+				drag: function(e) {
+					console.log(1)
+				},
+				stop: function(e) {
+					$('.dg-hook-move').attr('style', 'left:'+($($(this).parent()).width()/2 - $('.dg-hook-move').width()/2)+'px;');
+					console.log($($(this).parent()).width());
+				}
+			})
+		"), yii\web\View::POS_END);
 	}
 }
