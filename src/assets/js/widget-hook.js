@@ -130,7 +130,7 @@ $.widget = function( name, base, prototype ) {
 	constructor.prototype = $.widget.extend( basePrototype, {
 
 		// TODO: remove support for widgetEventPrefix
-		// always use the name + a colon as the prefix, e.g., draggable:start
+		// always use the name + a colon as the prefix, e.g., hook:start
 		// don't prefix for widgets that aren't DOM-based
 		widgetEventPrefix: existingConstructor ? ( basePrototype.widgetEventPrefix || name ) : name
 	}, proxiedPrototype, {
@@ -1057,7 +1057,7 @@ $.widget( "dg.hook", $.dg.mouse, {
 			this._setPositionRelative();
 		}
 		if ( this.options.addClasses ) {
-			this._addClass( "dg-draggable" );
+			this._addClass( "dg-hook" );
 		}
 		this._setHandleClassName();
 
@@ -1073,7 +1073,7 @@ $.widget( "dg.hook", $.dg.mouse, {
 	},
 
 	_destroy: function() {
-		if ( ( this.helper || this.element ).is( ".dg-draggable-dragging" ) ) {
+		if ( ( this.helper || this.element ).is( ".dg-hook-dragging" ) ) {
 			this.destroyOnClear = true;
 			return;
 		}
@@ -1146,19 +1146,19 @@ $.widget( "dg.hook", $.dg.mouse, {
 		//Create and append the visible helper
 		this.helper = this._createHelper( event );
 
-		this._addClass( this.helper, "dg-draggable-dragging" );
+		this._addClass( this.helper, "dg-hook-dragging" );
 
 		//Cache the helper size
 		this._cacheHelperProportions();
 
-		//If ddmanager is used for droppables, set the global draggable
+		//If ddmanager is used for droppables, set the global hook
 		if ( $.dg.ddmanager ) {
 			$.dg.ddmanager.current = this;
 		}
 
 		/*
 		 * - Position generation -
-		 * This block generates everything position related - it's the core of draggables.
+		 * This block generates everything position related - it's the core of hooks.
 		 */
 
 		//Cache the margins of the original element
@@ -1307,7 +1307,7 @@ $.widget( "dg.hook", $.dg.mouse, {
 			$.dg.ddmanager.dragStop( this, event );
 		}
 
-		// Only need to focus if the event occurred on the draggable itself, see #10527
+		// Only need to focus if the event occurred on the hook itself, see #10527
 		if ( this.handleElement.is( event.target ) ) {
 
 			// The interaction is over; whether or not the click resulted in a drag,
@@ -1320,7 +1320,7 @@ $.widget( "dg.hook", $.dg.mouse, {
 
 	cancel: function() {
 
-		if ( this.helper.is( ".dg-draggable-dragging" ) ) {
+		if ( this.helper.is( ".dg-hook-dragging" ) ) {
 			this._mouseUp( new $.Event( "mouseup", { target: this.element[ 0 ] } ) );
 		} else {
 			this._clear();
@@ -1339,11 +1339,11 @@ $.widget( "dg.hook", $.dg.mouse, {
 	_setHandleClassName: function() {
 		this.handleElement = this.options.handle ?
 			this.element.find( this.options.handle ) : this.element;
-		this._addClass( this.handleElement, "dg-draggable-handle" );
+		this._addClass( this.handleElement, "dg-hook-handle" );
 	},
 
 	_removeHandleClassName: function() {
-		this._removeClass( this.handleElement, "dg-draggable-handle" );
+		this._removeClass( this.handleElement, "dg-hook-handle" );
 	},
 
 	_createHelper: function( event ) {
@@ -1711,7 +1711,7 @@ $.widget( "dg.hook", $.dg.mouse, {
 	},
 
 	_clear: function() {
-		this._removeClass( this.helper, "dg-draggable-dragging" );
+		this._removeClass( this.helper, "dg-hook-dragging" );
 		if ( this.helper[ 0 ] !== this.element[ 0 ] && !this.cancelHelperRemoval ) {
 			this.helper.remove();
 		}
@@ -1749,18 +1749,18 @@ $.widget( "dg.hook", $.dg.mouse, {
 
 } );
 
-$.dg.plugin.add( "draggable", "connectToSortable", {
-	start: function( event, dg, draggable ) {
+$.dg.plugin.add( "hook", "connectToSortable", {
+	start: function( event, dg, hook ) {
 		var dgSortable = $.extend( {}, dg, {
-			item: draggable.element
+			item: hook.element
 		} );
 
-		draggable.sortables = [];
-		$( draggable.options.connectToSortable ).each( function() {
+		hook.sortables = [];
+		$( hook.options.connectToSortable ).each( function() {
 			var sortable = $( this ).sortable( "instance" );
 
 			if ( sortable && !sortable.options.disabled ) {
-				draggable.sortables.push( sortable );
+				hook.sortables.push( sortable );
 
 				// RefreshPositions is called at drag start to refresh the containerCache
 				// which is used in drag. This ensures it's initialized and synchronized
@@ -1770,25 +1770,25 @@ $.dg.plugin.add( "draggable", "connectToSortable", {
 			}
 		} );
 	},
-	stop: function( event, dg, draggable ) {
+	stop: function( event, dg, hook ) {
 		var dgSortable = $.extend( {}, dg, {
-			item: draggable.element
+			item: hook.element
 		} );
 
-		draggable.cancelHelperRemoval = false;
+		hook.cancelHelperRemoval = false;
 
-		$.each( draggable.sortables, function() {
+		$.each( hook.sortables, function() {
 			var sortable = this;
 
 			if ( sortable.isOver ) {
 				sortable.isOver = 0;
 
 				// Allow this sortable to handle removing the helper
-				draggable.cancelHelperRemoval = true;
+				hook.cancelHelperRemoval = true;
 				sortable.cancelHelperRemoval = false;
 
 				// Use _storedCSS To restore properties in the sortable,
-				// as this also handles revert (#9675) since the draggable
+				// as this also handles revert (#9675) since the hook
 				// may have modified them in unexpected ways (#8809)
 				sortable._storedCSS = {
 					position: sortable.placeholder.css( "position" ),
@@ -1799,12 +1799,12 @@ $.dg.plugin.add( "draggable", "connectToSortable", {
 				sortable._mouseStop( event );
 
 				// Once drag has ended, the sortable should return to using
-				// its original helper, not the shared helper from draggable
+				// its original helper, not the shared helper from hook
 				sortable.options.helper = sortable.options._helper;
 			} else {
 
 				// Prevent this Sortable from removing the helper.
-				// However, don't set the draggable to remove the helper
+				// However, don't set the hook to remove the helper
 				// either as another connected Sortable may yet handle the removal.
 				sortable.cancelHelperRemoval = true;
 
@@ -1812,25 +1812,25 @@ $.dg.plugin.add( "draggable", "connectToSortable", {
 			}
 		} );
 	},
-	drag: function( event, dg, draggable ) {
-		$.each( draggable.sortables, function() {
+	drag: function( event, dg, hook ) {
+		$.each( hook.sortables, function() {
 			var innermostIntersecting = false,
 				sortable = this;
 
 			// Copy over variables that sortable's _intersectsWith uses
-			sortable.positionAbs = draggable.positionAbs;
-			sortable.helperProportions = draggable.helperProportions;
-			sortable.offset.click = draggable.offset.click;
+			sortable.positionAbs = hook.positionAbs;
+			sortable.helperProportions = hook.helperProportions;
+			sortable.offset.click = hook.offset.click;
 
 			if ( sortable._intersectsWith( sortable.containerCache ) ) {
 				innermostIntersecting = true;
 
-				$.each( draggable.sortables, function() {
+				$.each( hook.sortables, function() {
 
 					// Copy over variables that sortable's _intersectsWith uses
-					this.positionAbs = draggable.positionAbs;
-					this.helperProportions = draggable.helperProportions;
-					this.offset.click = draggable.offset.click;
+					this.positionAbs = hook.positionAbs;
+					this.helperProportions = hook.helperProportions;
+					this.offset.click = hook.offset.click;
 
 					if ( this !== sortable &&
 							this._intersectsWith( this.containerCache ) &&
@@ -1849,8 +1849,8 @@ $.dg.plugin.add( "draggable", "connectToSortable", {
 				if ( !sortable.isOver ) {
 					sortable.isOver = 1;
 
-					// Store draggable's parent in case we need to reappend to it later.
-					draggable._parent = dg.helper.parent();
+					// Store hook's parent in case we need to reappend to it later.
+					hook._parent = dg.helper.parent();
 
 					sortable.currentItem = dg.helper
 						.appendTo( sortable.element )
@@ -1871,34 +1871,34 @@ $.dg.plugin.add( "draggable", "connectToSortable", {
 
 					// Because the browser event is way off the new appended portlet,
 					// modify necessary variables to reflect the changes
-					sortable.offset.click.top = draggable.offset.click.top;
-					sortable.offset.click.left = draggable.offset.click.left;
-					sortable.offset.parent.left -= draggable.offset.parent.left -
+					sortable.offset.click.top = hook.offset.click.top;
+					sortable.offset.click.left = hook.offset.click.left;
+					sortable.offset.parent.left -= hook.offset.parent.left -
 						sortable.offset.parent.left;
-					sortable.offset.parent.top -= draggable.offset.parent.top -
+					sortable.offset.parent.top -= hook.offset.parent.top -
 						sortable.offset.parent.top;
 
-					draggable._trigger( "toSortable", event );
+					hook._trigger( "toSortable", event );
 
-					// Inform draggable that the helper is in a valid drop zone,
+					// Inform hook that the helper is in a valid drop zone,
 					// used solely in the revert option to handle "valid/invalid".
-					draggable.dropped = sortable.element;
+					hook.dropped = sortable.element;
 
 					// Need to refreshPositions of all sortables in the case that
 					// adding to one sortable changes the location of the other sortables (#9675)
-					$.each( draggable.sortables, function() {
+					$.each( hook.sortables, function() {
 						this.refreshPositions();
 					} );
 
 					// Hack so receive/update callbacks work (mostly)
-					draggable.currentItem = draggable.element;
-					sortable.fromOutside = draggable;
+					hook.currentItem = hook.element;
+					sortable.fromOutside = hook;
 				}
 
 				if ( sortable.currentItem ) {
 					sortable._mouseDrag( event );
 
-					// Copy the sortable's position because the draggable's can potentially reflect
+					// Copy the sortable's position because the hook's can potentially reflect
 					// a relative position, while sortable is always absolute, which the dragged
 					// element has now become. (#8809)
 					dg.position = sortable.position;
@@ -1922,7 +1922,7 @@ $.dg.plugin.add( "draggable", "connectToSortable", {
 					sortable._mouseStop( event, true );
 
 					// Restore sortable behaviors that were modfied
-					// when the draggable entered the sortable area (#9481)
+					// when the hook entered the sortable area (#9481)
 					sortable.options.revert = sortable.options._revert;
 					sortable.options.helper = sortable.options._helper;
 
@@ -1930,20 +1930,20 @@ $.dg.plugin.add( "draggable", "connectToSortable", {
 						sortable.placeholder.remove();
 					}
 
-					// Restore and recalculate the draggable's offset considering the sortable
+					// Restore and recalculate the hook's offset considering the sortable
 					// may have modified them in unexpected ways. (#8809, #10669)
-					dg.helper.appendTo( draggable._parent );
-					draggable._refreshOffsets( event );
-					dg.position = draggable._generatePosition( event, true );
+					dg.helper.appendTo( hook._parent );
+					hook._refreshOffsets( event );
+					dg.position = hook._generatePosition( event, true );
 
-					draggable._trigger( "fromSortable", event );
+					hook._trigger( "fromSortable", event );
 
-					// Inform draggable that the helper is no longer in a valid drop zone
-					draggable.dropped = false;
+					// Inform hook that the helper is no longer in a valid drop zone
+					hook.dropped = false;
 
 					// Need to refreshPositions of all sortables just in case removing
 					// from one sortable changes the location of other sortables (#9675)
-					$.each( draggable.sortables, function() {
+					$.each( hook.sortables, function() {
 						this.refreshPositions();
 					} );
 				}
@@ -1952,7 +1952,7 @@ $.dg.plugin.add( "draggable", "connectToSortable", {
 	}
 } );
 
-$.dg.plugin.add( "draggable", "cursor", {
+$.dg.plugin.add( "hook", "cursor", {
 	start: function( event, dg, instance ) {
 		var t = $( "body" ),
 			o = instance.options;
@@ -1970,7 +1970,7 @@ $.dg.plugin.add( "draggable", "cursor", {
 	}
 } );
 
-$.dg.plugin.add( "draggable", "opacity", {
+$.dg.plugin.add( "hook", "opacity", {
 	start: function( event, dg, instance ) {
 		var t = $( dg.helper ),
 			o = instance.options;
@@ -1987,7 +1987,7 @@ $.dg.plugin.add( "draggable", "opacity", {
 	}
 } );
 
-$.dg.plugin.add( "draggable", "scroll", {
+$.dg.plugin.add( "hook", "scroll", {
 	start: function( event, dg, i ) {
 		if ( !i.scrollParentNotHidden ) {
 			i.scrollParentNotHidden = i.helper.scrollParent( false );
@@ -2057,14 +2057,14 @@ $.dg.plugin.add( "draggable", "scroll", {
 	}
 } );
 
-$.dg.plugin.add( "draggable", "snap", {
+$.dg.plugin.add( "hook", "snap", {
 	start: function( event, dg, i ) {
 
 		var o = i.options;
 
 		i.snapElements = [];
 
-		$( o.snap.constructor !== String ? ( o.snap.items || ":data(dg-draggable)" ) : o.snap )
+		$( o.snap.constructor !== String ? ( o.snap.items || ":data(dg-hook)" ) : o.snap )
 			.each( function() {
 				var $t = $( this ),
 					$o = $t.offset();
@@ -2188,7 +2188,7 @@ $.dg.plugin.add( "draggable", "snap", {
 	}
 } );
 
-$.dg.plugin.add( "draggable", "stack", {
+$.dg.plugin.add( "hook", "stack", {
 	start: function( event, dg, instance ) {
 		var min,
 			o = instance.options,
@@ -2207,7 +2207,7 @@ $.dg.plugin.add( "draggable", "stack", {
 	}
 } );
 
-$.dg.plugin.add( "draggable", "zIndex", {
+$.dg.plugin.add( "hook", "zIndex", {
 	start: function( event, dg, instance ) {
 		var t = $( dg.helper ),
 			o = instance.options;
@@ -2226,7 +2226,7 @@ $.dg.plugin.add( "draggable", "zIndex", {
 	}
 } );
 
-var widgetsDraggable = $.dg.draggable;
+var widgetsHook = $.dg.hook;
 
 
 
