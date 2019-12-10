@@ -46,7 +46,7 @@ class Hook extends Widget
 
 			echo Html::beginTag('div', ['class' => 'dg-hook-alignment']);
 
-				echo Html::beginTag('div', ['class' => 'dg-hook-move']);
+				echo Html::beginTag('div', ['id' => $this->id, 'class' => 'dg-hook-move']);
 
 					echo Html::beginTag('div', ['class' => 'dg-hook-grab']);
 
@@ -65,18 +65,18 @@ class Hook extends Widget
 		echo Html::endTag('div');
 
 		$this->view->registerJs(new JsExpression("
-			$('.dg-hook-move').hook({
+			$('.dg-hook-move#" . $this->id . "').hook({
 				containment: '" . $this->containment . "',
 				drag: (function(d, last){
 
 					var isMouseDown = false;
 
-					$(d).on('onmousedown touchstart', function(){ isMouseDown = true; });
-					$(d).on('onmouseup touchend', function(){ isMouseDown = false; });
+					$(d).on('mousedown touchstart', function(){ isMouseDown = true; });
+					$(d).on('mouseup touchend', function(){ isMouseDown = false; });
 
 					$(d).on('touchend', function(){
-						var width = ($($('.dg-hook-move').parent()).width() - $('.dg-hook-move').width())/2;
-						$('.dg-hook-move').attr('style', 'left:'+width+'px;');
+						var width = ($($('.dg-hook-move#" . $this->id . "').parent()).width() - $('.dg-hook-move#" . $this->id . "').width())/2;
+						$('.dg-hook-move#" . $this->id . "').attr('style', 'left:'+width+'px;');
 					});
 
 					$(d).on('mousemove', function(e){
@@ -102,15 +102,15 @@ class Hook extends Widget
 
 							var position = e.clientX ? e.clientX : e.originalEvent.changedTouches[0].clientX;
 								
-							$('.dg-hook-move').attr('style','left:' + (position/2 - ($($(e.target).parent()).width()/2 - $(e.target).width())) + 'px;');
+							$('.dg-hook-move#" . $this->id . "').attr('style','left:' + (position/2 - ($($(e.target).parent()).width()/2 - $(e.target).width())) + 'px;');
 
 						}
 					});
 
 				})(document, 0),
 				stop: function(e) {
-					var width = ($($('.dg-hook-move').parent()).width() - $('.dg-hook-move').width())/2;
-					$('.dg-hook-move').attr('style', 'left:'+width+'px;');
+					var width = ($($('.dg-hook-move#" . $this->id . "').parent()).width() - $('.dg-hook-move#" . $this->id . "').width())/2;
+					$('.dg-hook-move#" . $this->id . "').attr('style', 'left:'+width+'px;');
 				}
 			})
 		"), yii\web\View::POS_END);
