@@ -6,6 +6,7 @@ use yii\web\JsExpression;
 use yii\base\Widget;
 use yii\helpers\Html;
 use yii\helpers\Json;
+use yii\helpers\ArrayHelper;
 
 class Hook extends Widget
 {
@@ -17,6 +18,8 @@ class Hook extends Widget
 	public $image;
 
 	public $container = false;
+
+	public $options = [];
 
 	public $containment = 'parent';
 
@@ -38,7 +41,7 @@ class Hook extends Widget
 
 		HookAssets::register(Yii::$app->getView());
 
-		echo Html::beginTag('div', ['class' => 'dg-hook-container']);
+		echo Html::beginTag('div', array_merge_recursive(['class' => 'dg-hook-container'], $this->options));
 
 			if($this->container === true){
 				echo Html::beginTag('div', ['class' => 'container']);
