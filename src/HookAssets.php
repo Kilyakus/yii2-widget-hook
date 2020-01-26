@@ -9,7 +9,7 @@ class HookAssets extends AssetBundle
     {
         $this->sourcePath = __DIR__ . '/assets';
 
-        $this->js[] = 'js/widget-hook.js';
+        $this->js[] = 'js/widget-hook.min.js';
 
         $this->css[] = 'css/widget-hook.css';
     }

@@ -1,11 +1,7 @@
 (function( factory ) {
 	if ( typeof define === "function" && define.amd ) {
-
-		// AMD. Register as an anonymous module.
 		define([ "jquery" ], factory );
 	} else {
-
-		// Browser globals
 		factory( jQuery );
 	}
 }(function( $ ) {
@@ -22,14 +18,10 @@ $.cleanData = ( function( orig ) {
 		var events, elem, i;
 		for ( i = 0; ( elem = elems[ i ] ) != null; i++ ) {
 			try {
-
-				// Only trigger remove when necessary to save time
 				events = $._data( elem, "events" );
 				if ( events && events.remove ) {
 					$( elem ).triggerHandler( "remove" );
 				}
-
-			// Http://bugs.jquery.com/ticket/8235
 			} catch ( e ) {}
 		}
 		orig( elems );
@@ -39,8 +31,6 @@ $.cleanData = ( function( orig ) {
 $.widget = function( name, base, prototype ) {
 	var existingConstructor, constructor, basePrototype;
 
-	// ProxiedPrototype allows the provided prototype to remain unmodified
-	// so that it can be used as a mixin for multiple widgets (#8876)
 	var proxiedPrototype = {};
 
 	var namespace = name.split( "." )[ 0 ];
@@ -56,7 +46,6 @@ $.widget = function( name, base, prototype ) {
 		prototype = $.extend.apply( null, [ {} ].concat( prototype ) );
 	}
 
-	// Create selector for plugin
 	$.expr[ ":" ][ fullName.toLowerCase() ] = function( elem ) {
 		return !!$.data( elem, fullName );
 	};
@@ -65,36 +54,24 @@ $.widget = function( name, base, prototype ) {
 	existingConstructor = $[ namespace ][ name ];
 	constructor = $[ namespace ][ name ] = function( options, element ) {
 
-		// Allow instantiation without "new" keyword
 		if ( !this._createWidget ) {
 			return new constructor( options, element );
 		}
 
-		// Allow instantiation without initializing for simple inheritance
-		// must use "new" keyword (the code above always passes args)
 		if ( arguments.length ) {
 			this._createWidget( options, element );
 		}
 	};
 
-	// Extend with the existing constructor to carry over any static properties
 	$.extend( constructor, existingConstructor, {
 		version: prototype.version,
 
-		// Copy the object used to create the prototype in case we need to
-		// redefine the widget later
 		_proto: $.extend( {}, prototype ),
 
-		// Track widgets that inherit from this widget in case this widget is
-		// redefined after a widget inherits from it
 		_childConstructors: []
 	} );
 
 	basePrototype = new base();
-
-	// We need to make the options hash a property directly on the new instance
-	// otherwise we'll modify the options hash on the prototype that we're
-	// inheriting from
 	basePrototype.options = $.widget.extend( {}, basePrototype.options );
 	$.each( prototype, function( prop, value ) {
 		if ( !$.isFunction( value ) ) {
@@ -128,10 +105,6 @@ $.widget = function( name, base, prototype ) {
 		} )();
 	} );
 	constructor.prototype = $.widget.extend( basePrototype, {
-
-		// TODO: remove support for widgetEventPrefix
-		// always use the name + a colon as the prefix, e.g., hook:start
-		// don't prefix for widgets that aren't DOM-based
 		widgetEventPrefix: existingConstructor ? ( basePrototype.widgetEventPrefix || name ) : name
 	}, proxiedPrototype, {
 		constructor: constructor,
@@ -140,22 +113,12 @@ $.widget = function( name, base, prototype ) {
 		widgetFullName: fullName
 	} );
 
-	// If this widget is being redefined then we need to find all widgets that
-	// are inheriting from it and redefine all of them so that they inherit from
-	// the new version of this widget. We're essentially trying to replace one
-	// level in the prototype chain.
 	if ( existingConstructor ) {
 		$.each( existingConstructor._childConstructors, function( i, child ) {
 			var childPrototype = child.prototype;
-
-			// Redefine the child widget using the same prototype that was
-			// originally used, but inherit from the new version of the base
 			$.widget( childPrototype.namespace + "." + childPrototype.widgetName, constructor,
 				child._proto );
 		} );
-
-		// Remove the list of existing child constructors from the old constructor
-		// so the old child constructors can be garbage collected
 		delete existingConstructor._childConstructors;
 	} else {
 		base._childConstructors.push( constructor );
@@ -178,15 +141,10 @@ $.widget.extend = function( target ) {
 			value = input[ inputIndex ][ key ];
 			if ( input[ inputIndex ].hasOwnProperty( key ) && value !== undefined ) {
 
-				// Clone objects
 				if ( $.isPlainObject( value ) ) {
 					target[ key ] = $.isPlainObject( target[ key ] ) ?
 						$.widget.extend( {}, target[ key ], value ) :
-
-						// Don't extend strings, arrays, etc. with objects
 						$.widget.extend( {}, value );
-
-				// Copy everything else by reference
 				} else {
 					target[ key ] = value;
 				}
@@ -204,9 +162,6 @@ $.widget.bridge = function( name, object ) {
 		var returnValue = this;
 
 		if ( isMethodCall ) {
-
-			// If this is an empty collection, we need to have the instance method
-			// return undefined instead of the jQuery instance
 			if ( !this.length && options === "instance" ) {
 				returnValue = undefined;
 			} else {
@@ -241,8 +196,6 @@ $.widget.bridge = function( name, object ) {
 				} );
 			}
 		} else {
-
-			// Allow multiple hashes to be passed on init
 			if ( args.length ) {
 				options = $.widget.extend.apply( null, [ options ].concat( args ) );
 			}
@@ -275,8 +228,6 @@ $.Widget.prototype = {
 	options: {
 		classes: {},
 		disabled: false,
-
-		// Callbacks
 		create: null
 	},
 
@@ -301,11 +252,7 @@ $.Widget.prototype = {
 				}
 			} );
 			this.document = $( element.style ?
-
-				// Element within the document
 				element.ownerDocument :
-
-				// Element is window or document
 				element.document || element );
 			this.window = $( this.document[ 0 ].defaultView || this.document[ 0 ].parentWindow );
 		}
@@ -342,17 +289,12 @@ $.Widget.prototype = {
 		$.each( this.classesElementLookup, function( key, value ) {
 			that._removeClass( value, key );
 		} );
-
-		// We can probably remove the unbind calls in 2.0
-		// all event bindings should go through this._on()
 		this.element
 			.off( this.eventNamespace )
 			.removeData( this.widgetFullName );
 		this.widget()
 			.off( this.eventNamespace )
 			.removeAttr( "aria-disabled" );
-
-		// Clean up events and states
 		this.bindings.off( this.eventNamespace );
 	},
 
@@ -369,14 +311,10 @@ $.Widget.prototype = {
 		var i;
 
 		if ( arguments.length === 0 ) {
-
-			// Don't return a reference to the internal hash
 			return $.widget.extend( {}, this.options );
 		}
 
 		if ( typeof key === "string" ) {
-
-			// Handle nested keys, e.g., "foo.bar" => { foo: { bar: ___ } }
 			options = {};
 			parts = key.split( "." );
 			key = parts.shift();
@@ -439,17 +377,9 @@ $.Widget.prototype = {
 				continue;
 			}
 
-			// We are doing this to create a new jQuery object because the _removeClass() call
-			// on the next line is going to destroy the reference to the current elements being
-			// tracked. We need to save a copy of this collection so that we can add the new classes
-			// below.
 			elements = $( currentElements.get() );
 			this._removeClass( currentElements, classKey );
 
-			// We don't use _addClass() here, because that uses this.options.classes
-			// for generating the string of classes. We want to use the value passed in from
-			// _setOption(), this is the new value of the classes option which was passed to
-			// _setOption(). We pass this value directly to _classes().
 			elements.addClass( this._classes( {
 				element: elements,
 				keys: classKey,
@@ -462,7 +392,6 @@ $.Widget.prototype = {
 	_setOptionDisabled: function( value ) {
 		this._toggleClass( this.widget(), this.widgetFullName + "-disabled", null, !!value );
 
-		// If the widget is becoming disabled, then nothing is interactive
 		if ( value ) {
 			this._removeClass( this.hoverable, null, "dg-state-hover" );
 			this._removeClass( this.focusable, null, "dg-state-focus" );
@@ -551,14 +480,12 @@ $.Widget.prototype = {
 		var delegateElement;
 		var instance = this;
 
-		// No suppressDisabledCheck flag, shuffle arguments
 		if ( typeof suppressDisabledCheck !== "boolean" ) {
 			handlers = element;
 			element = suppressDisabledCheck;
 			suppressDisabledCheck = false;
 		}
 
-		// No element argument, shuffle and use this.element
 		if ( !handlers ) {
 			handlers = element;
 			element = this.element;
@@ -571,9 +498,6 @@ $.Widget.prototype = {
 		$.each( handlers, function( event, handler ) {
 			function handlerProxy() {
 
-				// Allow widgets to customize the disabled handling
-				// - disabled as an array instead of boolean
-				// - disabled class as method for disabling individual parts
 				if ( !suppressDisabledCheck &&
 						( instance.options.disabled === true ||
 						$( this ).hasClass( "dg-state-disabled" ) ) ) {
@@ -583,7 +507,6 @@ $.Widget.prototype = {
 					.apply( instance, arguments );
 			}
 
-			// Copy the gdgd so direct unbinding works
 			if ( typeof handler !== "string" ) {
 				handlerProxy.gdgd = handler.gdgd =
 					handler.gdgd || handlerProxy.gdgd || $.gdgd++;
@@ -606,7 +529,6 @@ $.Widget.prototype = {
 			this.eventNamespace;
 		element.off( eventName ).off( eventName );
 
-		// Clear the stack to avoid memory leaks (#10056)
 		this.bindings = $( this.bindings.not( element ).get() );
 		this.focusable = $( this.focusable.not( element ).get() );
 		this.hoverable = $( this.hoverable.not( element ).get() );
@@ -655,11 +577,8 @@ $.Widget.prototype = {
 			type :
 			this.widgetEventPrefix + type ).toLowerCase();
 
-		// The original event may come from any element
-		// so we need to reset the target on the new event
 		event.target = this.element[ 0 ];
 
-		// Copy original event properties over to the new event
 		orig = event.originalEvent;
 		if ( orig ) {
 			for ( prop in orig ) {
@@ -753,24 +672,16 @@ var scrollParent = $.fn.scrollParent = function( includeHidden ) {
 var safeActiveElement = $.dg.safeActiveElement = function( document ) {
 	var activeElement;
 
-	// Support: IE 9 only
-	// IE9 throws an "Unspecified error" accessing document.activeElement from an <iframe>
 	try {
 		activeElement = document.activeElement;
 	} catch ( error ) {
 		activeElement = document.body;
 	}
 
-	// Support: IE 9 - 11 only
-	// IE may return null instead of an element
-	// Interestingly, this only seems to occur when NOT in an iframe
 	if ( !activeElement ) {
 		activeElement = document.body;
 	}
 
-	// Support: IE 11 only
-	// IE11 returns a seemingly empty object in some cases when accessing
-	// document.activeElement from an <iframe>
 	if ( !activeElement.nodeName ) {
 		activeElement = document.body;
 	}
@@ -808,8 +719,6 @@ var widgetsMouse = $.widget( "dg.mouse", {
 		this.started = false;
 	},
 
-	// TODO: make sure destroying one instance of mouse doesn't mess with
-	// other instances of mouse
 	_mouseDestroy: function() {
 		this.element.off( "." + this.widgetName );
 		if ( this._mouseMoveDelegate ) {
@@ -821,23 +730,18 @@ var widgetsMouse = $.widget( "dg.mouse", {
 
 	_mouseDown: function( event ) {
 
-		// don't let more than one widget handle mouseStart
 		if ( mouseHandled ) {
 			return;
 		}
 
 		this._mouseMoved = false;
 
-		// We may have missed mouseup (out of window)
 		( this._mouseStarted && this._mouseUp( event ) );
 
 		this._mouseDownEvent = event;
 
 		var that = this,
 			btnIsLeft = ( event.which === 1 ),
-
-			// event.target.nodeName works around a bug in IE 8 with
-			// disabled inputs (#7620)
 			elIsCancel = ( typeof this.options.cancel === "string" && event.target.nodeName ?
 				$( event.target ).closest( this.options.cancel ).length : false );
 		if ( !btnIsLeft || elIsCancel || !this._mouseCapture( event ) ) {
@@ -859,12 +763,10 @@ var widgetsMouse = $.widget( "dg.mouse", {
 			}
 		}
 
-		// Click event may never have fired (Gecko & Opera)
 		if ( true === $.data( event.target, this.widgetName + ".preventClickEvent" ) ) {
 			$.removeData( event.target, this.widgetName + ".preventClickEvent" );
 		}
 
-		// These delegates are reqdgred to keep context
 		this._mouseMoveDelegate = function( event ) {
 			return that._mouseMove( event );
 		};
@@ -884,23 +786,14 @@ var widgetsMouse = $.widget( "dg.mouse", {
 
 	_mouseMove: function( event ) {
 
-		// Only check for mouseups outside the document if you've moved inside the document
-		// at least once. This prevents the firing of mouseup in the case of IE<9, which will
-		// fire a mousemove event if content is placed under the cursor. See #7778
-		// Support: IE <9
 		if ( this._mouseMoved ) {
 
-			// IE mouseup check - mouseup happened when mouse was out of window
 			if ( $.dg.ie && ( !document.documentMode || document.documentMode < 9 ) &&
 					!event.button ) {
 				return this._mouseUp( event );
 
-			// Iframe mouseup check - mouseup occurred in another document
 			} else if ( !event.which ) {
 
-				// Support: Safari <=8 - 9
-				// Safari sets which to 0 if you press any of the following keys
-				// during a drag (#14461)
 				if ( event.originalEvent.altKey || event.originalEvent.ctrlKey ||
 						event.originalEvent.metaKey || event.originalEvent.shiftKey ) {
 					this.ignoreMissingWhich = true;
@@ -965,17 +858,12 @@ var widgetsMouse = $.widget( "dg.mouse", {
 		return this.mouseDelayMet;
 	},
 
-	// These are placeholder methods, to be overriden by extending plugin
 	_mouseStart: function( /* event */ ) {},
 	_mouseDrag: function( /* event */ ) {},
 	_mouseStop: function( /* event */ ) {},
 	_mouseCapture: function( /* event */ ) { return true; }
 } );
 
-
-
-
-// $.dg.plugin is deprecated. Use $.widget() extensions instead.
 var plugin = $.dg.plugin = {
 	add: function( module, option, set ) {
 		var i,
@@ -1010,8 +898,6 @@ var plugin = $.dg.plugin = {
 
 var safeBlur = $.dg.safeBlur = function( element ) {
 
-	// Support: IE9 - 10 only
-	// If the <body> is blurred, IE will switch windows, see #9420
 	if ( element && element.nodeName.toLowerCase() !== "body" ) {
 		$( element ).trigger( "blur" );
 	}
@@ -1083,14 +969,11 @@ $.widget( "dg.hook", $.dg.mouse, {
 
 	_mouseCapture: function( event ) {
 		var o = this.options;
-
-		// Among others, prevent a drag on a resizable-handle
 		if ( this.helper || o.disabled ||
 				$( event.target ).closest( ".dg-resizable-handle" ).length > 0 ) {
 			return false;
 		}
 
-		//Qdgt if we're not on a valid handle
 		this.handle = this._getHandle( event );
 		if ( !this.handle ) {
 			return false;
@@ -1128,14 +1011,10 @@ $.widget( "dg.hook", $.dg.mouse, {
 		var activeElement = $.dg.safeActiveElement( this.document[ 0 ] ),
 			target = $( event.target );
 
-		// Don't blur if the event occurred on an element that is within
-		// the currently focused element
-		// See #10527, #12472
 		if ( target.closest( activeElement ).length ) {
 			return;
 		}
 
-		// Blur any element that currently has focus, see #4261
 		$.dg.safeBlur( activeElement );
 	},
 
@@ -1143,28 +1022,18 @@ $.widget( "dg.hook", $.dg.mouse, {
 
 		var o = this.options;
 
-		//Create and append the visible helper
 		this.helper = this._createHelper( event );
 
 		this._addClass( this.helper, "dg-hook-dragging" );
 
-		//Cache the helper size
 		this._cacheHelperProportions();
 
-		//If ddmanager is used for droppables, set the global hook
 		if ( $.dg.ddmanager ) {
 			$.dg.ddmanager.current = this;
 		}
 
-		/*
-		 * - Position generation -
-		 * This block generates everything position related - it's the core of hooks.
-		 */
-
-		//Cache the margins of the original element
 		this._cacheMargins();
 
-		//Store the helper's css position
 		this.cssPosition = this.helper.css( "position" );
 		this.scrollParent = this.helper.scrollParent( true );
 		this.offsetParent = this.helper.offsetParent();
@@ -1172,41 +1041,30 @@ $.widget( "dg.hook", $.dg.mouse, {
 				return $( this ).css( "position" ) === "fixed";
 			} ).length > 0;
 
-		//The element's absolute position on the page minus margins
 		this.positionAbs = this.element.offset();
 		this._refreshOffsets( event );
 
-		//Generate the original position
 		this.originalPosition = this.position = this._generatePosition( event, false );
 		this.originalPageX = event.pageX;
 		this.originalPageY = event.pageY;
 
-		//Adjust the mouse offset relative to the helper if "cursorAt" is supplied
 		( o.cursorAt && this._adjustOffsetFromHelper( o.cursorAt ) );
 
-		//Set a containment if given in the options
 		this._setContainment();
 
-		//Trigger event + callbacks
 		if ( this._trigger( "start", event ) === false ) {
 			this._clear();
 			return false;
 		}
 
-		//Recache the helper size
 		this._cacheHelperProportions();
 
-		//Prepare the droppable offsets
 		if ( $.dg.ddmanager && !o.dropBehaviour ) {
 			$.dg.ddmanager.prepareOffsets( this, event );
 		}
 
-		// Execute the drag once - this causes the helper not to be visible before getting its
-		// correct position
 		this._mouseDrag( event, true );
 
-		// If the ddmanager is used for droppables, inform the manager that dragging has started
-		// (see #5003)
 		if ( $.dg.ddmanager ) {
 			$.dg.ddmanager.dragStart( this, event );
 		}
@@ -1231,16 +1089,13 @@ $.widget( "dg.hook", $.dg.mouse, {
 
 	_mouseDrag: function( event, noPropagation ) {
 
-		// reset any necessary cached properties (see #5009)
 		if ( this.hasFixedAncestor ) {
 			this.offset.parent = this._getParentOffset();
 		}
 
-		//Compute the helpers position
 		this.position = this._generatePosition( event, true );
 		this.positionAbs = this._convertPositionTo( "absolute" );
 
-		//Call plugins and callbacks and use the resulting position if something is returned
 		if ( !noPropagation ) {
 			var dg = this._dgHash();
 			if ( this._trigger( "drag", event, dg ) === false ) {
@@ -1262,14 +1117,12 @@ $.widget( "dg.hook", $.dg.mouse, {
 
 	_mouseStop: function( event ) {
 
-		//If we are using droppables, inform the manager about the drop
 		var that = this,
 			dropped = false;
 		if ( $.dg.ddmanager && !this.options.dropBehaviour ) {
 			dropped = $.dg.ddmanager.drop( this, event );
 		}
 
-		//if a drop comes from outside (a sortable)
 		if ( this.dropped ) {
 			dropped = this.dropped;
 			this.dropped = false;
@@ -1301,17 +1154,11 @@ $.widget( "dg.hook", $.dg.mouse, {
 	_mouseUp: function( event ) {
 		this._unblockFrames();
 
-		// If the ddmanager is used for droppables, inform the manager that dragging has stopped
-		// (see #5003)
 		if ( $.dg.ddmanager ) {
 			$.dg.ddmanager.dragStop( this, event );
 		}
 
-		// Only need to focus if the event occurred on the hook itself, see #10527
 		if ( this.handleElement.is( event.target ) ) {
-
-			// The interaction is over; whether or not the click resulted in a drag,
-			// focus the element
 			this.element.trigger( "focus" );
 		}
 
@@ -1362,9 +1209,6 @@ $.widget( "dg.hook", $.dg.mouse, {
 				o.appendTo ) );
 		}
 
-		// Http://bugs.jquerydg.com/ticket/9446
-		// a helper function can return the original element
-		// which wouldn't have been set to relative in _create
 		if ( helperIsFunction && helper[ 0 ] === this.element[ 0 ] ) {
 			this._setPositionRelative();
 		}
@@ -1411,17 +1255,9 @@ $.widget( "dg.hook", $.dg.mouse, {
 
 	_getParentOffset: function() {
 
-		//Get the offsetParent and cache its position
 		var po = this.offsetParent.offset(),
 			document = this.document[ 0 ];
 
-		// This is a special case where we need to modify a offset calculated on start, since the
-		// following happened:
-		// 1. The position of the helper is absolute, so it's position is calculated based on the
-		// next positioned parent
-		// 2. The actual offset parent is a child of the scroll parent, and the scroll parent isn't
-		// the document, which means that the scroll is included in the initial calculation of the
-		// offset of the parent, and never recalculated upon drag
 		if ( this.cssPosition === "absolute" && this.scrollParent[ 0 ] !== document &&
 				$.contains( this.scrollParent[ 0 ], this.offsetParent[ 0 ] ) ) {
 			po.left += this.scrollParent.scrollLeft();
@@ -1560,27 +1396,16 @@ $.widget( "dg.hook", $.dg.mouse, {
 		return {
 			top: (
 
-				// The absolute mouse position
 				pos.top	+
-
-				// Only for relative positioned nodes: Relative offset from element to offset parent
 				this.offset.relative.top * mod +
-
-				// The offsetParent's offset without borders (offset + border)
 				this.offset.parent.top * mod -
 				( ( this.cssPosition === "fixed" ?
 					-this.offset.scroll.top :
 					( scrollIsRootNode ? 0 : this.offset.scroll.top ) ) * mod )
 			),
 			left: (
-
-				// The absolute mouse position
 				pos.left +
-
-				// Only for relative positioned nodes: Relative offset from element to offset parent
 				this.offset.relative.left * mod +
-
-				// The offsetParent's offset without borders (offset + border)
 				this.offset.parent.left * mod	-
 				( ( this.cssPosition === "fixed" ?
 					-this.offset.scroll.left :
@@ -1598,7 +1423,6 @@ $.widget( "dg.hook", $.dg.mouse, {
 			pageX = event.pageX,
 			pageY = event.pageY;
 
-		// Cache the scroll
 		if ( !scrollIsRootNode || !this.offset.scroll ) {
 			this.offset.scroll = {
 				top: this.scrollParent.scrollTop(),
@@ -1606,12 +1430,6 @@ $.widget( "dg.hook", $.dg.mouse, {
 			};
 		}
 
-		/*
-		 * - Position constraining -
-		 * Constrain the position to a mix of grid, containment.
-		 */
-
-		// If we are not dragging yet, we won't check for options
 		if ( constrainPosition ) {
 			if ( this.containment ) {
 				if ( this.relativeContainer ) {
@@ -1642,8 +1460,6 @@ $.widget( "dg.hook", $.dg.mouse, {
 
 			if ( o.grid ) {
 
-				//Check for grid elements set to 0 to prevent divide by 0 error causing invalid
-				// argument errors in IE (see ticket #6950)
 				top = o.grid[ 1 ] ? this.originalPageY + Math.round( ( pageY -
 					this.originalPageY ) / o.grid[ 1 ] ) * o.grid[ 1 ] : this.originalPageY;
 				pageY = containment ? ( ( top - this.offset.click.top >= containment[ 1 ] ||
@@ -1674,33 +1490,18 @@ $.widget( "dg.hook", $.dg.mouse, {
 		return {
 			top: (
 
-				// The absolute mouse position
 				pageY -
-
-				// Click offset (relative to the element)
 				this.offset.click.top -
-
-				// Only for relative positioned nodes: Relative offset from element to offset parent
 				this.offset.relative.top -
-
-				// The offsetParent's offset without borders (offset + border)
 				this.offset.parent.top +
 				( this.cssPosition === "fixed" ?
 					-this.offset.scroll.top :
 					( scrollIsRootNode ? 0 : this.offset.scroll.top ) )
 			),
 			left: (
-
-				// The absolute mouse position
 				pageX -
-
-				// Click offset (relative to the element)
 				this.offset.click.left -
-
-				// Only for relative positioned nodes: Relative offset from element to offset parent
 				this.offset.relative.left -
-
-				// The offsetParent's offset without borders (offset + border)
 				this.offset.parent.left +
 				( this.cssPosition === "fixed" ?
 					-this.offset.scroll.left :
@@ -1722,13 +1523,10 @@ $.widget( "dg.hook", $.dg.mouse, {
 		}
 	},
 
-	// From now on bulk stuff - mainly helpers
-
 	_trigger: function( type, event, dg ) {
 		dg = dg || this._dgHash();
 		$.dg.plugin.call( this, type, [ event, dg, this ], true );
 
-		// Absolute position and offset (see #6884 ) have to be recalculated after plugins
 		if ( /^(drag|start|stop)/.test( type ) ) {
 			this.positionAbs = this._convertPositionTo( "absolute" );
 			dg.offset = this.positionAbs;
@@ -1761,10 +1559,6 @@ $.dg.plugin.add( "hook", "connectToSortable", {
 
 			if ( sortable && !sortable.options.disabled ) {
 				hook.sortables.push( sortable );
-
-				// RefreshPositions is called at drag start to refresh the containerCache
-				// which is used in drag. This ensures it's initialized and synchronized
-				// with any changes that might have happened on the page since initialization.
 				sortable.refreshPositions();
 				sortable._trigger( "activate", event, dgSortable );
 			}
@@ -1783,13 +1577,9 @@ $.dg.plugin.add( "hook", "connectToSortable", {
 			if ( sortable.isOver ) {
 				sortable.isOver = 0;
 
-				// Allow this sortable to handle removing the helper
 				hook.cancelHelperRemoval = true;
 				sortable.cancelHelperRemoval = false;
 
-				// Use _storedCSS To restore properties in the sortable,
-				// as this also handles revert (#9675) since the hook
-				// may have modified them in unexpected ways (#8809)
 				sortable._storedCSS = {
 					position: sortable.placeholder.css( "position" ),
 					top: sortable.placeholder.css( "top" ),
@@ -1797,17 +1587,9 @@ $.dg.plugin.add( "hook", "connectToSortable", {
 				};
 
 				sortable._mouseStop( event );
-
-				// Once drag has ended, the sortable should return to using
-				// its original helper, not the shared helper from hook
 				sortable.options.helper = sortable.options._helper;
 			} else {
-
-				// Prevent this Sortable from removing the helper.
-				// However, don't set the hook to remove the helper
-				// either as another connected Sortable may yet handle the removal.
 				sortable.cancelHelperRemoval = true;
-
 				sortable._trigger( "deactivate", event, dgSortable );
 			}
 		} );
@@ -1817,7 +1599,6 @@ $.dg.plugin.add( "hook", "connectToSortable", {
 			var innermostIntersecting = false,
 				sortable = this;
 
-			// Copy over variables that sortable's _intersectsWith uses
 			sortable.positionAbs = hook.positionAbs;
 			sortable.helperProportions = hook.helperProportions;
 			sortable.offset.click = hook.offset.click;
@@ -1826,8 +1607,6 @@ $.dg.plugin.add( "hook", "connectToSortable", {
 				innermostIntersecting = true;
 
 				$.each( hook.sortables, function() {
-
-					// Copy over variables that sortable's _intersectsWith uses
 					this.positionAbs = hook.positionAbs;
 					this.helperProportions = hook.helperProportions;
 					this.offset.click = hook.offset.click;
@@ -1843,34 +1622,23 @@ $.dg.plugin.add( "hook", "connectToSortable", {
 			}
 
 			if ( innermostIntersecting ) {
-
-				// If it intersects, we use a little isOver variable and set it once,
-				// so that the move-in stuff gets fired only once.
 				if ( !sortable.isOver ) {
 					sortable.isOver = 1;
-
-					// Store hook's parent in case we need to reappend to it later.
 					hook._parent = dg.helper.parent();
 
 					sortable.currentItem = dg.helper
 						.appendTo( sortable.element )
 						.data( "dg-sortable-item", true );
-
-					// Store helper option to later restore it
 					sortable.options._helper = sortable.options.helper;
 
 					sortable.options.helper = function() {
 						return dg.helper[ 0 ];
 					};
 
-					// Fire the start events of the sortable with our passed browser event,
-					// and our own helper (so it doesn't create a new one)
 					event.target = sortable.currentItem[ 0 ];
 					sortable._mouseCapture( event, true );
 					sortable._mouseStart( event, true, true );
 
-					// Because the browser event is way off the new appended portlet,
-					// modify necessary variables to reflect the changes
 					sortable.offset.click.top = hook.offset.click.top;
 					sortable.offset.click.left = hook.offset.click.left;
 					sortable.offset.parent.left -= hook.offset.parent.left -
@@ -1880,17 +1648,12 @@ $.dg.plugin.add( "hook", "connectToSortable", {
 
 					hook._trigger( "toSortable", event );
 
-					// Inform hook that the helper is in a valid drop zone,
-					// used solely in the revert option to handle "valid/invalid".
 					hook.dropped = sortable.element;
 
-					// Need to refreshPositions of all sortables in the case that
-					// adding to one sortable changes the location of the other sortables (#9675)
 					$.each( hook.sortables, function() {
 						this.refreshPositions();
 					} );
 
-					// Hack so receive/update callbacks work (mostly)
 					hook.currentItem = hook.element;
 					sortable.fromOutside = hook;
 				}
@@ -1898,31 +1661,21 @@ $.dg.plugin.add( "hook", "connectToSortable", {
 				if ( sortable.currentItem ) {
 					sortable._mouseDrag( event );
 
-					// Copy the sortable's position because the hook's can potentially reflect
-					// a relative position, while sortable is always absolute, which the dragged
-					// element has now become. (#8809)
 					dg.position = sortable.position;
 				}
 			} else {
 
-				// If it doesn't intersect with the sortable, and it intersected before,
-				// we fake the drag stop of the sortable, but make sure it doesn't remove
-				// the helper by using cancelHelperRemoval.
 				if ( sortable.isOver ) {
 
 					sortable.isOver = 0;
 					sortable.cancelHelperRemoval = true;
 
-					// Calling sortable's mouseStop would trigger a revert,
-					// so revert must be temporarily false until after mouseStop is called.
 					sortable.options._revert = sortable.options.revert;
 					sortable.options.revert = false;
 
 					sortable._trigger( "out", event, sortable._dgHash( sortable ) );
 					sortable._mouseStop( event, true );
 
-					// Restore sortable behaviors that were modfied
-					// when the hook entered the sortable area (#9481)
 					sortable.options.revert = sortable.options._revert;
 					sortable.options.helper = sortable.options._helper;
 
@@ -1930,19 +1683,14 @@ $.dg.plugin.add( "hook", "connectToSortable", {
 						sortable.placeholder.remove();
 					}
 
-					// Restore and recalculate the hook's offset considering the sortable
-					// may have modified them in unexpected ways. (#8809, #10669)
 					dg.helper.appendTo( hook._parent );
 					hook._refreshOffsets( event );
 					dg.position = hook._generatePosition( event, true );
 
 					hook._trigger( "fromSortable", event );
 
-					// Inform hook that the helper is no longer in a valid drop zone
 					hook.dropped = false;
 
-					// Need to refreshPositions of all sortables just in case removing
-					// from one sortable changes the location of other sortables (#9675)
 					$.each( hook.sortables, function() {
 						this.refreshPositions();
 					} );
